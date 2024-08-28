@@ -1,0 +1,29 @@
+diff --git a/lib/cli.js b/lib/cli.js
+index afd1e65cbd1c1ce9e437b0ac7acf30cbc1bed57c..fb4de5588fccc90947f04347c364c9e298a87da2 100644
+--- a/lib/cli.js
++++ b/lib/cli.js
+@@ -441,12 +441,13 @@ const cli = {
+             : {};
+ 
+         if (await printResults(engine, resultsToPrint, options.format, options.outputFile, resultsMeta)) {
++            const printedResultCounts = countErrors(resultsToPrint);
+ 
+             // Errors and warnings from the original unfiltered results should determine the exit code
+             const shouldExitForFatalErrors =
+-                options.exitOnFatalError && resultCounts.fatalErrorCount > 0;
++                options.exitOnFatalError && printedResultCounts.fatalErrorCount > 0;
+ 
+-            if (!resultCounts.errorCount && tooManyWarnings) {
++            if (!printedResultCounts.errorCount && tooManyWarnings) {
+                 log.error(
+                     "ESLint found too many warnings (maximum: %s).",
+                     options.maxWarnings
+@@ -457,7 +458,7 @@ const cli = {
+                 return 2;
+             }
+ 
+-            return (resultCounts.errorCount || tooManyWarnings) ? 1 : 0;
++            return (printedResultCounts.errorCount || tooManyWarnings) ? 1 : 0;
+         }
+ 
+         return 2;
