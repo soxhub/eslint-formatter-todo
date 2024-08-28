@@ -89,8 +89,8 @@
     }
   },
   "volta": {
-    "node": "14.20.0",
-    "npm": "9.1.1"
+    "node": "22.6.0",
+    "pnpm": "9.8.0"
   },
   "bugs": {
     "url": "https://github.com/lint-todo/eslint-formatter-todo/issues"
