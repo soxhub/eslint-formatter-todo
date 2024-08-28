@@ -83,7 +83,7 @@ describe('format-results', () => {
     updateResults(results, todos);
 
     // last result should stay unchanged
-    expect(results[results.length - 1]).toEqual(lastResult);
+    expect(results.at(-1)).toEqual(lastResult);
 
     // everything else should be mutated
     results.forEach((result, resultIndex) => {
