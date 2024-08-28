@@ -40,6 +40,9 @@ importers:
       type-fest:
         specifier: ^0.20.2
         version: 0.20.2
+      upath:
+        specifier: ^2.0.1
+        version: 2.0.1
       validate-peer-dependencies:
         specifier: ^2.1.0
         version: 2.2.0

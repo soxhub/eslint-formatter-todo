@@ -11,8 +11,10 @@ import {
   todoStorageFileExists,
   validateConfig,
   WriteTodoOptions,
-  writeTodos,
   getSourceForRange,
+  readTodos,
+  ReadTodoOptions,
+  FilePath,
 } from '@lint-todo/utils';
 import { relative, join } from 'path';
 import hasFlag from 'has-flag';
@@ -22,6 +24,10 @@ import { getBaseDir } from './get-base-dir';
 
 import type { ESLint, Linter } from 'eslint';
 import type { TodoFormatterOptions } from './types';
+import TodoMatcher from '@lint-todo/utils/lib/todo-matcher';
+
+import { normalize } from 'upath';
+import { ensureTodoStorageFile, getTodoBatches } from '@lint-todo/utils/lib/io';
 
 export async function formatter(results: ESLint.LintResult[]): Promise<string> {
   const baseDir = getBaseDir();
@@ -59,6 +65,14 @@ export async function formatter(results: ESLint.LintResult[]): Promise<string> {
     );
   }
 
+  // TODO: Should we lock the file here?
+
+  // SAFETY: This method only actually needs the engine
+  const existingTodos = readTodos(baseDir, { engine: 'eslint' } as ReadTodoOptions, false);
+
+  const addedTodos = new Set<TodoData>();
+  const removedTodos = new Set<TodoData>();
+
   for (const fileResults of results) {
     const maybeTodos = buildMaybeTodos(
       baseDir,
@@ -74,15 +88,35 @@ export async function formatter(results: ESLint.LintResult[]): Promise<string> {
     };
 
     if (updateTodo) {
-      const { addedCount, removedCount } = writeTodos(
-        baseDir,
-        maybeTodos,
-        optionsForFile
-      );
+      const writeOptions = Object.assign({ shouldRemove: () => true, overwrite: false }, optionsForFile);
 
-      todoInfo.added += addedCount;
-      todoInfo.removed += removedCount;
+      let existing: Map<FilePath, TodoMatcher>;
+      if (writeOptions.filePath) {
+        const normalizedFilePath = normalize(writeOptions.filePath);
+
+        const matcher = existingTodos.get(normalizedFilePath) || new TodoMatcher();
+
+        existing = new Map([[normalizedFilePath, matcher]]);
+      } else {
+        existing = existingTodos;
+      }
+
+      const batches = getTodoBatches(maybeTodos, existing, writeOptions);
+
+      todoInfo.added += batches.add.size;
+      todoInfo.removed += batches.remove.size;
+
+      for (const todo of batches.add) {
+        addedTodos.add(todo);
+      }
+      for (const todo of batches.remove) {
+        removedTodos.add(todo);
+      }
     }
+
+    ensureTodoStorageFile(baseDir);
+
+    applyTodoChanges(baseDir, addedTodos, removedTodos, false);
 
     processResults(results, maybeTodos, {
       formatTodoAs,
