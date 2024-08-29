@@ -2,6 +2,7 @@ import {
   applyTodoChanges,
   buildTodoDatum,
   compactTodoStorageFile,
+  ensureTodoStorageFile,
   generateTodoBatches,
   getSeverity,
   getTodoConfig,
@@ -67,6 +68,8 @@ export async function formatter(results: ESLint.LintResult[]): Promise<string> {
 
   // TODO: Should we lock the file here?
 
+  ensureTodoStorageFile(baseDir);
+
   // SAFETY: This method only actually needs the engine
   const existingTodos = readTodos(baseDir, { engine: 'eslint' } as ReadTodoOptions, false);
 
@@ -113,8 +116,6 @@ export async function formatter(results: ESLint.LintResult[]): Promise<string> {
         removedTodos.add(todo);
       }
     }
-
-    ensureTodoStorageFile(baseDir);
 
     applyTodoChanges(baseDir, addedTodos, removedTodos, false);
 
