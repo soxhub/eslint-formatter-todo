@@ -5,6 +5,7 @@ import {
   ensureTodoStorageFile,
   generateTodoBatches,
   getSeverity,
+  getTodoBatches,
   getTodoConfig,
   Severity,
   TodoConfig,
@@ -28,9 +29,9 @@ import type { TodoFormatterOptions } from './types';
 import TodoMatcher from '@lint-todo/utils/lib/todo-matcher';
 
 import { normalize } from 'upath';
-import { ensureTodoStorageFile, getTodoBatches } from '@lint-todo/utils/lib/io';
 
 export async function formatter(results: ESLint.LintResult[]): Promise<string> {
+  console.log('start formatter');
   const baseDir = getBaseDir();
   const todoConfigResult = validateConfig(baseDir);
 
@@ -132,6 +133,8 @@ export async function formatter(results: ESLint.LintResult[]): Promise<string> {
   if (hasFlag('quiet')) {
     results = filterResults(results);
   }
+
+  console.log('printing results');
 
   return await printResults(results, {
     formatTodoAs,
